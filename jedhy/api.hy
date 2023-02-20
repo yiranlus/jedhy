@@ -2,23 +2,23 @@
 
 ;; * Imports
 
-(require [jedhy.macros [*]])
-(import [jedhy.macros [*]])
+(require jedhy.macros *)
+(import jedhy.macros *)
 
-(import [jedhy.inspection [Inspect]]
-        [jedhy.models [Candidate
-                       Namespace
-                       Prefix]])
-
+(import jedhy.inspection [Inspect]
+        jedhy.models [Candidate
+                      Namespace
+                      Prefix])
+(require hyrule [->])
 ;; * API
 
-(defclass API [object]
-  (defn --init-- [self &optional globals- locals- macros-]
+(defclass API []
+  (defn __init__ [self [globals- None] [locals- None] [macros- None]]
     (self.set-namespace globals- locals- macros-)
+    
+    (setv self._cached-prefix None))
 
-    (setv self.-cached-prefix None))
-
-  (defn set-namespace [self &optional globals- locals- macros-]
+  (defn set-namespace [self [globals- None] [locals- None]  [macros- None]]
     "Rebuild namespace for possibly given `globals-`, `locals-`, and `macros-`.
 
 Typically, the values passed are:
@@ -29,29 +29,29 @@ Typically, the values passed are:
 
   (defn complete [self prefix-str]
     "Completions for a prefix string."
-    (setv [cached-prefix prefix] [self.-cached-prefix
+    (setv [cached-prefix prefix] [self._cached-prefix
                                   (Prefix prefix-str :namespace self.namespace)])
-    (setv self.-cached-prefix prefix)
+    (setv self._cached-prefix prefix)
 
     (.complete prefix :cached-prefix cached-prefix))
 
   (defn annotate [self candidate-str]
     "Annotate a candidate string."
     (-> candidate-str
-      (Candidate :namespace self.namespace)
-      (.annotate)))
+        (Candidate :namespace self.namespace)
+        (.annotate)))
 
-  (defn -inspect [self candidate-str]
+  (defn _inspect [self candidate-str]
     "Inspect a candidate string."
     (-> candidate-str
-       (Candidate :namespace self.namespace)
-       (.get-obj)
-       Inspect))
+        (Candidate :namespace self.namespace)
+        (.get-obj)
+        Inspect))
 
   (defn docs [self candidate-str]
     "Docstring for a candidate string."
-    (-> candidate-str self.-inspect (.docs)))
+    (-> candidate-str (self._inspect) (.docs)))
 
   (defn full-docs [self candidate-str]
     "Full documentation for a candidate string."
-    (-> candidate-str self.-inspect (.full-docs))))
+    (-> candidate-str (self._inspect) (.full-docs))))

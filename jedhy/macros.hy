@@ -2,13 +2,11 @@
 
 ;; * Imports
 
-(require [hy.extra.anaphoric [*]])
-
 (import functools
-        [toolz.curried :as tz]
-
-        [hy.lex [unmangle
-                 mangle :as unfixed-mangle]])
+        tlz
+        hy [unmangle
+            mangle :as unfixed-mangle])
+(require hyrule [fn+ ->>])
 
 ;; * Hy Overwrites
 
@@ -18,32 +16,34 @@
 
 ;; * Tag Macros
 
-(deftag t [form]
-  "Cast evaluated form to a tuple. Useful via eg. #t(-> x f1 f2 ...)."
-  `(tuple ~form))
-
-(deftag $ [form]
+(defreader $
   "Partially apply a form eg. (#$(map inc) [1 2 3])."
-  `(functools.partial ~@form))
+  (let [form (.parse-one-form &reader)]
+      `(do
+         (import functools [partial])
+         (functools.partial ~@form))))
 
-(deftag f [form]
+(defreader f
   "Flipped #$."
-  `(tz.flip ~@form))
+  (let [form (.parse-one-form &reader)]
+    `(do
+       (import tlz [flip])
+       (tlz.flip ~@form))))
 
 ;; * Misc
 
-(defn -allkeys [d &kwonly [parents (,)]]
+(defn _allkeys [d * [parents #()]]
   "In-order tuples of keys of nested, variable-length dict."
-  (if (isinstance d (, list tuple))
+  (if (isinstance d #(list tuple))
       []
-      #t(->> d
-         (tz.keymap (fn [k] (+ parents (, k))))
-         dict.items
-         (*map (fn [k v]
-                 (if (isinstance v dict)
-                     (-allkeys v :parents k)
-                     [k])))
-         tz.concat)))
+      (tuple (->> d
+                  (tlz.keymap (fn [k] (+ parents #(k))))
+                  (.items)
+                  (map (fn+ [[k v]]
+                         (if (isinstance v dict)
+                             (_allkeys v :parents k)
+                             [k])))
+                  (tlz.concat)))))
 
 (defn allkeys [d]
-  (->> d -allkeys (map last) tuple))
+  (->> d _allkeys (map tlz.last) tuple))
