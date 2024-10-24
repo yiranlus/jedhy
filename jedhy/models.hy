@@ -8,7 +8,7 @@
         
         hy
         hy.reader
-        hy.core.result-macros [__macros__ :as _compile-table]
+        hy.core.result-macros [_hy_macros :as _compile-table]
 
         hyrule [distinct butlast]
         itertools [chain]
@@ -30,7 +30,7 @@
     ;; Components
     (setv self.globals       (or globals- (globals)))
     (setv self.locals        (or locals- (locals)))
-    (setv self.macros        (tlz.keymap unmangle (or macros- __macros__)))
+    (setv self.macros        (tlz.keymap unmangle (or macros- _hy_macros)))
     (setv self.compile-table (self._collect-compile-table))
 
     ;; Collected
